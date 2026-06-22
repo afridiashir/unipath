@@ -3,6 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import authRoutes from "./modules/auth/auth.route.js";
 import userRoutes from "./modules/users/users.route.js";
+import profileRoutes from "./modules/profile/profile.route.js";
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use("/profile", profileRoutes);
 
 const port = Number(process.env.PORT ?? 3005);
 app.listen(port, () => {

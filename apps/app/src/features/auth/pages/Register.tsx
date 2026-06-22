@@ -63,10 +63,10 @@ const Register = () => {
 
       const res = await axios.post(`${baseURL}/auth/register`, form);
 
-      const { token, name, email, avatar } = res.data;
+      const { token, name, email, avatar, onboarded } = res.data;
 
-      login({ token, name, email, avatar });
-      navigate("/home");
+      login({ token, name, email, avatar, onboarded });
+      navigate("/");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Something went wrong");
     } finally {

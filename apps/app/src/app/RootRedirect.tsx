@@ -8,6 +8,11 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
+  // Users without a saved profile are sent through onboarding first.
+  if (!user.onboarded) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   return <Navigate to="/home" replace />;
 };
 

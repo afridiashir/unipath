@@ -7,6 +7,8 @@ export interface AuthUser {
   email: string;
   token: string;
   avatar?: string;
+  /** Whether the user has saved a profile (completed onboarding). */
+  onboarded?: boolean;
 }
 
 interface AuthState {

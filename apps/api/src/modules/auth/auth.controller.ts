@@ -11,6 +11,13 @@ const signToken = (user: { id: string; email: string; role: string }) =>
     { expiresIn: "7d" }
   );
 
+/** A user is "onboarded" once they have a saved profile. */
+const isOnboarded = async (userId: string) =>
+  !!(await prisma.profile.findUnique({
+    where: { userId },
+    select: { id: true },
+  }));
+
 export const register = async (req: Request, res: Response) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
@@ -31,7 +38,10 @@ export const register = async (req: Request, res: Response) => {
     });
 
     const token = signToken(user);
-    res.status(201).json({ token, email: user.email, name: user.name });
+    // A freshly registered user never has a profile yet.
+    res
+      .status(201)
+      .json({ token, email: user.email, name: user.name, onboarded: false });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -58,7 +68,8 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = signToken(user);
-    res.json({ token, email: user.email, name: user.name });
+    const onboarded = await isOnboarded(user.id);
+    res.json({ token, email: user.email, name: user.name, onboarded });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -110,11 +121,13 @@ export const googleAuth = async (req: Request, res: Response) => {
     }
 
     const token = signToken(user);
+    const onboarded = await isOnboarded(user.id);
     res.json({
       token,
       email: user.email,
       name: user.name,
       avatar: profile.picture,
+      onboarded,
     });
   } catch (err) {
     console.error(err);

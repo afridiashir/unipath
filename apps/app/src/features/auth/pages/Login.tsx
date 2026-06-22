@@ -64,10 +64,10 @@ const Login = () => {
 
       const res = await axios.post(`${baseURL}/auth/login`, form);
 
-      const { token, name, email, avatar } = res.data;
+      const { token, name, email, avatar, onboarded } = res.data;
 
-      login({ token, name, email, avatar });
-      navigate("/home");
+      login({ token, name, email, avatar, onboarded });
+      navigate("/");
     } catch {
       toast.error("Invalid email or password");
     } finally {

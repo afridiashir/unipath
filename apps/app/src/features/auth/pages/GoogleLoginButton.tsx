@@ -43,10 +43,10 @@ const GoogleLoginButton = () => {
         token: tokenResponse.access_token,
       });
 
-      const { token, name, email, avatar } = res.data;
+      const { token, name, email, avatar, onboarded } = res.data;
 
-      login({ token, name, email, avatar });
-      navigate("/home");
+      login({ token, name, email, avatar, onboarded });
+      navigate("/");
     } catch (err) {
       console.error(err);
       toast.error("Google login failed");

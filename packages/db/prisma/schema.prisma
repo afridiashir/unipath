@@ -22,7 +22,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts Account[]
+  accounts     Account[]
+  profile      Profile?
+  applications SavedApplication[]
+  chatMessages ChatMessage[]
 }
 
 model Account {
@@ -42,4 +45,282 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Feature 1: Student Profile
+// One profile per user. Singular facts (location, test scores, preferences)
+// live here; education, work experience, and activities are dynamic lists
+// stored as child records so the form can add/remove rows freely.
+// ---------------------------------------------------------------------------
+model Profile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Personal
+  country String? // country of residence / origin
+
+  // Standardized test scores
+  ielts Float?
+  toefl Int?
+  gre   Int?
+  gmat  Int?
+
+  // Preferences (drive the matcher)
+  countriesOfInterest    String[]               @default([])
+  intendedPrograms       String[]               @default([])
+  budget                 Int? // max annual tuition budget, USD
+  scholarshipRequirement ScholarshipRequirement @default(PREFERRED)
+  intake                 Intake?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  educations      Education[]
+  workExperiences WorkExperience[]
+  activities      Activity[]
+}
+
+// One academic record. A profile can have several (e.g. Bachelor's + Master's).
+model Education {
+  id        String @id @default(uuid())
+  profileId String
+
+  institution    String // school / university name
+  degree         String? // e.g. "BSc", "Bachelor of Engineering"
+  fieldOfStudy   String? // major
+  cgpa           Float?
+  startYear      Int?
+  graduationYear Int?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([profileId])
+}
+
+// One job / internship. Years of experience are derived from the date range.
+model WorkExperience {
+  id        String @id @default(uuid())
+  profileId String
+
+  company     String
+  jobTitle    String?
+  industry    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([profileId])
+}
+
+// Extracurriculars, volunteering, research, leadership, etc.
+model Activity {
+  id        String @id @default(uuid())
+  profileId String
+
+  title        String
+  role         String?
+  organization String?
+  type         String? // e.g. "volunteer", "research", "leadership"
+  startDate    DateTime?
+  endDate      DateTime?
+  description  String?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([profileId])
+}
+
+// ---------------------------------------------------------------------------
+// Catalog: University + Program (populated by the scraper, read by the API)
+// ---------------------------------------------------------------------------
+model University {
+  id         String  @id @default(uuid())
+  name       String  @unique
+  country    String
+  city       String?
+  qsRanking  Int?
+  websiteUrl String?
+  logoUrl    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  programs Program[]
+
+  @@index([country])
+}
+
+model Program {
+  id           String  @id @default(uuid())
+  universityId String
+  name         String
+  slug         String
+  degreeType   String? // e.g. "MSc", "MS", "MA"
+  discipline   String? // e.g. "Computer Science"
+
+  // Logistics
+  durationMonths Int?
+  intakes        Intake[]  @default([])
+  deadline       DateTime?
+
+  // Costs
+  tuitionAmount   Int? // per the period below
+  tuitionCurrency String? @default("USD")
+  tuitionPeriod   String? @default("year") // "year" | "total"
+
+  // Scholarships
+  scholarshipsAvailable Boolean @default(false)
+  scholarshipsInfo      String?
+
+  // Content sections (Program Details page)
+  overview              String?
+  admissionRequirements String?
+  topEmployers          String[] @default([])
+
+  // Structured admission thresholds — used to compute Confidence Bands.
+  minCgpa  Float?
+  minIelts Float?
+  minToefl Int?
+  minGre   Int?
+  minGmat  Int?
+
+  // Scraper bookkeeping
+  sourceUrl     String?
+  contentHash   String?
+  lastScrapedAt DateTime?
+  isActive      Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  university   University         @relation(fields: [universityId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  applications SavedApplication[]
+
+  @@unique([universityId, slug])
+  @@index([discipline])
+  @@index([isActive])
+}
+
+// ---------------------------------------------------------------------------
+// Feature 6: My Applications — a user's saved programs and their status.
+// confidenceBand / whyRecommended are snapshots captured at save time so the
+// card stays stable even if the profile or catalog later changes.
+// ---------------------------------------------------------------------------
+model SavedApplication {
+  id        String @id @default(uuid())
+  userId    String
+  programId String
+
+  status         ApplicationStatus @default(INTERESTED)
+  confidenceBand ConfidenceBand?
+  whyRecommended String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, programId])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Feature 5: AI Counselor Chat — persisted conversation history per user.
+// ---------------------------------------------------------------------------
+model ChatMessage {
+  id      String   @id @default(uuid())
+  userId  String
+  role    ChatRole
+  content String
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Scraper observability + quarantine for records that fail validation.
+// ---------------------------------------------------------------------------
+model ScrapeRun {
+  id          String       @id @default(uuid())
+  status      ScrapeStatus @default(RUNNING)
+  startedAt   DateTime     @default(now())
+  finishedAt  DateTime?
+  added       Int          @default(0)
+  updated     Int          @default(0)
+  quarantined Int          @default(0)
+  failed      Int          @default(0)
+  error       String?
+}
+
+model ProgramQuarantine {
+  id             String   @id @default(uuid())
+  sourceUrl      String?
+  universityName String?
+  rawData        Json
+  errors         Json
+  resolved       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Enums — mirror the Zod enums in @repo/schemas (runtime source of truth).
+// ---------------------------------------------------------------------------
+enum Intake {
+  FALL
+  SPRING
+  SUMMER
+  WINTER
+}
+
+enum ScholarshipRequirement {
+  REQUIRED
+  PREFERRED
+  NOT_NEEDED
+}
+
+enum ConfidenceBand {
+  DREAM
+  COMPETITIVE
+  STRONG_MATCH
+  SAFE_CHOICE
+}
+
+enum ApplicationStatus {
+  INTERESTED
+  APPLYING
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+enum ScrapeStatus {
+  RUNNING
+  SUCCESS
+  FAILED
 }

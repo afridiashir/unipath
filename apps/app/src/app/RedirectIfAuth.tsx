@@ -9,7 +9,9 @@ const RedirectIfAuth = ({ children }: Props) => {
   const user = useAuthStore((s) => s.user);
 
   if (user) {
-    return <Navigate to="/home" replace />;
+    // Send through the root redirect so the onboarding gate can decide
+    // whether to show onboarding or the home page.
+    return <Navigate to="/" replace />;
   }
 
   return children;
