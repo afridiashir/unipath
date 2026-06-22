@@ -1,5 +1,5 @@
 import type { Response } from "express";
-import { prisma } from "@repo/db";
+import { prisma, Prisma } from "@repo/db";
 import { profileInputSchema } from "@repo/schemas";
 import type { AuthenticatedRequest } from "../../types/request.types.js";
 
@@ -59,12 +59,16 @@ export const upsertProfile = async (
         tx.activity.deleteMany({ where: { profileId: saved.id } }),
       ]);
 
+      // The payloads are validated by `profileInputSchema` (required fields use
+      // `.min(1)`), so the casts below are sound. They shield us from a Zod
+      // type-inference quirk that surfaces under Vercel's own TS compilation of
+      // the function, where the inferred element type widens to all-optional.
       if (educations.length) {
         await tx.education.createMany({
           data: educations.map(({ id: _id, ...e }) => ({
             ...e,
             profileId: saved.id,
-          })),
+          })) as Prisma.EducationCreateManyInput[],
         });
       }
       if (workExperiences.length) {
@@ -72,7 +76,7 @@ export const upsertProfile = async (
           data: workExperiences.map(({ id: _id, ...w }) => ({
             ...w,
             profileId: saved.id,
-          })),
+          })) as Prisma.WorkExperienceCreateManyInput[],
         });
       }
       if (activities.length) {
@@ -80,7 +84,7 @@ export const upsertProfile = async (
           data: activities.map(({ id: _id, ...a }) => ({
             ...a,
             profileId: saved.id,
-          })),
+          })) as Prisma.ActivityCreateManyInput[],
         });
       }
 
