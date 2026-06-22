@@ -9,11 +9,11 @@ import {
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Mail, Send } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
-import { AuthHeader } from "./AuthHeader";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 const baseURL = import.meta.env.VITE_API_ROUTE;
@@ -60,12 +60,12 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="h-screen flex items-center bg-background justify-center">
-      <AuthHeader />
-      <Card className="w-[400px]">
+    <div className="relative min-h-screen overflow-hidden bg-[#F3F3F3] flex items-center justify-center p-6">
+      <Card className="w-full max-w-[450px] border-0 shadow-none rounded-none bg-transparent">
         <CardHeader>
           <CardTitle className="font-semibold">
-            <h1>Forgot your password?</h1>
+            <Send className="w-8 h-8 mb-3" />
+            <h1 className="text-xl">Forgot your password?</h1>
           </CardTitle>
 
           <CardDescription>
@@ -80,21 +80,24 @@ const ForgotPassword = () => {
             <Field>
               <FieldLabel>Email</FieldLabel>
               <FieldContent>
-                <Input
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="me@mywebsite.com"
-                  className="py-5"
-                />
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="me@mywebsite.com"
+                    className="py-5 pl-10 bg-white transition-colors hover:bg-gray-50"
+                  />
+                </div>
               </FieldContent>
             </Field>
 
             <Button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-6"
+              className="w-full mt-6 py-6 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -108,6 +111,14 @@ const ForgotPassword = () => {
               )}
             </Button>
           </form>
+
+          <Link
+            to="/login"
+            className="mt-4 flex w-fit items-center gap-1 text-sm text-primary font-semibold"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to sign in
+          </Link>
         </CardContent>
       </Card>
 

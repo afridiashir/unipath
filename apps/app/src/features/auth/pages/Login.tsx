@@ -79,7 +79,7 @@ const Login = () => {
     <div className="relative min-h-screen overflow-hidden bg-[#F3F3F3] flex items-center justify-center p-6">
       
       <div className="container flex items-center justify-around">
-      <Card className="flex flex-col justify-center w-full max-w-[500px] border-0 h-[800px] shadow-none rounded-none bg-transparent">
+      <Card className="flex flex-col justify-center w-full max-w-[500px] border-0 shadow-none rounded-none bg-transparent">
           <CardHeader>
             <CardTitle className="font-semibold">
               <Send className="w-8 h-8 mb-3"/>
@@ -186,7 +186,7 @@ const Login = () => {
           
            
       </Card>
-      <div className="w-[600px] bg-tr h-[800px] min-h-full rounded-lg overflow-hidden" style={{
+      <div className="hidden lg:block w-[600px] bg-tr h-[90vh] rounded-lg overflow-hidden" style={{
         backgroundImage:"url('/public/auth-background.jpg')",
         backgroundSize:"cover",
         backgroundPosition:"center",
