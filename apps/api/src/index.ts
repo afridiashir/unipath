@@ -11,6 +11,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000", // app (vite + react)
+      "https://app.unipath.education"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -24,6 +25,10 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+app.get("/",(req,res)=>{
+
+  res.send("Hello, I am Working");
+})
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/profile", profileRoutes);
