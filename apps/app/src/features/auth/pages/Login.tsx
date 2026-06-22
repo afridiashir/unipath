@@ -187,7 +187,7 @@ const Login = () => {
            
       </Card>
       <div className="hidden lg:block w-[600px] bg-tr h-[90vh] rounded-lg overflow-hidden" style={{
-        backgroundImage:"url('/public/auth-background.jpg')",
+        backgroundImage:"url('/auth-background.jpg')",
         backgroundSize:"cover",
         backgroundPosition:"center",
         backgroundColor:"rgba(0,0,0,0.1)"
