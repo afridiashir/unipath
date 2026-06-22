@@ -33,7 +33,13 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/profile", profileRoutes);
 
-const port = Number(process.env.PORT ?? 3005);
-app.listen(port, () => {
-  console.log(`API listening on http://localhost:${port}`);
-});
+// On Vercel the app is invoked as a serverless handler (exported below), so we
+// must NOT bind a port. Only start a long-running server for local dev.
+if (!process.env.VERCEL) {
+  const port = Number(process.env.PORT ?? 3005);
+  app.listen(port, () => {
+    console.log(`API listening on http://localhost:${port}`);
+  });
+}
+
+export default app;
