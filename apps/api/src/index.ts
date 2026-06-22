@@ -9,8 +9,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:3000", // web (next)
-      "http://localhost:3001", // docs (next)
+      "http://localhost:3000", // app (vite + react)
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

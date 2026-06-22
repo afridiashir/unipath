@@ -48,6 +48,13 @@ export const loginSchema = z.object({
 
 export type Login = z.infer<typeof loginSchema>;
 
+/** Payload accepted when signing in with Google (implicit-flow access token). */
+export const googleAuthSchema = z.object({
+  token: z.string().min(1),
+});
+
+export type GoogleAuth = z.infer<typeof googleAuthSchema>;
+
 /** Payload accepted when setting a password for the first time. */
 export const addPasswordSchema = z.object({
   newPassword: z.string().min(8),
