@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -32,6 +33,7 @@ const SidebarBody = ({ onNavigate }: { onNavigate?: () => void }) => {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+  const [avatarError, setAvatarError] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -72,10 +74,13 @@ const SidebarBody = ({ onNavigate }: { onNavigate?: () => void }) => {
 
       {/* User footer */}
       <div className="flex items-center gap-3 rounded-lg bg-white/60 p-2">
-        {user?.avatar ? (
+        {user?.avatar && !avatarError ? (
           <img
             src={user.avatar}
             alt={user.name}
+            // Google avatar URLs 403 when a referrer is sent — suppress it.
+            referrerPolicy="no-referrer"
+            onError={() => setAvatarError(true)}
             className="h-9 w-9 rounded-full object-cover"
           />
         ) : (
