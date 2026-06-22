@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useOnboardingStore } from "./onboarding.store";
 
 export interface AuthUser {
   id?: string;
@@ -27,7 +28,12 @@ export const useAuthStore = create<AuthState>()(
 
       login: (user) => set({ user }),
 
-      logout: () => set({ user: null }),
+      logout: () => {
+        set({ user: null });
+        // Wipe every other store so nothing leaks into the next session.
+        useOnboardingStore.getState().reset();
+        useOnboardingStore.persist.clearStorage();
+      },
 
       updateUser: (data) =>
         set((state) => ({
