@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { prisma } from "@repo/db";
+import { prisma, Prisma } from "@repo/db";
 import { registerSchema, loginSchema, googleAuthSchema } from "@repo/schemas";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -34,7 +34,7 @@ export const register = async (req: Request, res: Response) => {
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, password: hashed },
+      data: { name, email, password: hashed } as Prisma.UserCreateInput,
     });
 
     const token = signToken(user);
@@ -116,7 +116,10 @@ export const googleAuth = async (req: Request, res: Response) => {
     });
     if (!user) {
       user = await prisma.user.create({
-        data: { email: profile.email, name: profile.name ?? null },
+        data: {
+          email: profile.email,
+          name: profile.name ?? null,
+        } as Prisma.UserCreateInput,
       });
     }
 

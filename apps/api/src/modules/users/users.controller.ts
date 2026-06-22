@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { prisma } from "@repo/db";
+import { prisma, Prisma } from "@repo/db";
 import {
   createUserSchema,
   addPasswordSchema,
@@ -28,7 +28,10 @@ export const createUser = async (req: Request, res: Response) => {
   }
 
   const user = await prisma.user.create({
-    data: parsed.data,
+    // `parsed.data` is validated by createUserSchema (email is a required,
+    // valid email). The cast guards against a Zod inference quirk under
+    // Vercel's TS compiler that widens required fields to optional.
+    data: parsed.data as Prisma.UserCreateInput,
     select: publicUserSelect,
   });
   res.status(201).json(user);
