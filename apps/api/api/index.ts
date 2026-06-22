@@ -1,7 +1,10 @@
 // Vercel serverless entry point.
 //
 // Vercel treats files inside this `api/` directory as serverless functions.
-// An Express app is itself a valid `(req, res)` handler, so we just re-export
-// the configured app. The app does NOT call `listen()` on Vercel (see
-// ../src/index.ts), which is required for serverless invocation to work.
-export { default } from "../src/index.js";
+// We import the PREBUILT bundle (`../dist/index.js`, produced by tsup during
+// the build step) rather than the TypeScript source. This is deliberate:
+// `@vercel/node` type-checks whatever TS it compiles with its own compiler
+// config, which differs from our tsconfig and trips on Zod-inferred types.
+// Pointing at the already-bundled JS sidesteps that entirely — the app is a
+// valid `(req, res)` handler and does not call `listen()` on Vercel.
+export { default } from "../dist/index.js";
