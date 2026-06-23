@@ -1,7 +1,15 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Compass, FolderOpen, UserRound } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useApi } from "@/hooks/use-api";
+import { toDraft } from "@/features/profile/lib/mapProfile";
+import {
+  computeCompletion,
+  type ProfileCompletion,
+} from "@/features/profile/lib/completion";
+import ProfileCompletionCard from "../components/ProfileCompletionCard";
 
 const QUICK_LINKS = [
   {
@@ -34,6 +42,38 @@ const Home = () => {
   usePageTitle("Dashboard");
   const user = useAuthStore((s) => s.user);
   const firstName = user?.name?.split(" ")[0];
+  const profileCompleted = useAuthStore((s) => s.profileCompleted);
+  const setProfileCompleted = useAuthStore((s) => s.setProfileCompleted);
+  const api = useApi();
+
+  const [completion, setCompletion] = useState<ProfileCompletion | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    // Once the profile is complete we no longer fetch or show the prompt.
+    if (profileCompleted) {
+      setLoadingProfile(false);
+      return;
+    }
+    let active = true;
+    (async () => {
+      try {
+        const res = await api.get("/profile");
+        if (active) {
+          const result = computeCompletion(toDraft(res.data?.profile ?? null));
+          setCompletion(result);
+          if (result.percent === 100) setProfileCompleted(true);
+        }
+      } catch {
+        // Leave completion null; the card shows nothing actionable on failure.
+      } finally {
+        if (active) setLoadingProfile(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [api, profileCompleted, setProfileCompleted]);
 
   return (
     <div>
@@ -45,6 +85,16 @@ const Home = () => {
           Here&rsquo;s where you&rsquo;ll shape your study-abroad journey.
         </p>
       </div>
+
+      {/* Profile completion row — hidden once the profile is complete */}
+      {!profileCompleted && (
+        <div className="mb-8">
+          <ProfileCompletionCard
+            completion={completion}
+            loading={loadingProfile}
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {QUICK_LINKS.map(({ to, icon: Icon, title, body }) => (
